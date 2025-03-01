@@ -1,5 +1,7 @@
 package com.afra.pennypie.presentation.transactions.add
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -8,9 +10,11 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.afra.pennypie.R
 import com.afra.pennypie.domain.model.Account
 import com.afra.pennypie.domain.model.Category
 import com.afra.pennypie.domain.model.TransactionType
@@ -18,6 +22,7 @@ import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionScreen(
@@ -25,6 +30,9 @@ fun AddTransactionScreen(
     viewModel: AddTransactionViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    var showCategoryDropdown by remember { mutableStateOf(false) }
+    var showAccountDropdown by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
@@ -32,13 +40,45 @@ fun AddTransactionScreen(
         }
     }
 
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = state.date.toInstant(java.time.ZoneOffset.UTC).toEpochMilli(),
+            initialDisplayMode = DisplayMode.Input
+        )
+        
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val localDateTime = LocalDateTime.ofInstant(
+                            java.time.Instant.ofEpochMilli(millis),
+                            java.time.ZoneId.systemDefault()
+                        )
+                        viewModel.onEvent(AddTransactionEvent.DateChanged(localDateTime))
+                    }
+                    showDatePicker = false
+                }) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Transaction") },
+                title = { Text(stringResource(R.string.add)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.nav_back))
                     }
                 }
             )
@@ -55,7 +95,7 @@ fun AddTransactionScreen(
             OutlinedTextField(
                 value = state.amount,
                 onValueChange = { viewModel.onEvent(AddTransactionEvent.AmountChanged(it)) },
-                label = { Text("Amount") },
+                label = { Text(stringResource(R.string.amount)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -68,20 +108,23 @@ fun AddTransactionScreen(
 
             // Category selector
             ExposedDropdownMenuBox(
-                expanded = false,
-                onExpandedChange = { }
+                expanded = showCategoryDropdown,
+                onExpandedChange = { showCategoryDropdown = it }
             ) {
                 OutlinedTextField(
                     value = state.selectedCategory?.name ?: "",
                     onValueChange = { },
                     readOnly = true,
-                    label = { Text("Category") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text(stringResource(R.string.category)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
                 )
 
-                DropdownMenu(
-                    expanded = false,
-                    onDismissRequest = { }
+                ExposedDropdownMenu(
+                    expanded = showCategoryDropdown,
+                    onDismissRequest = { showCategoryDropdown = false }
                 ) {
                     state.categories
                         .filter { it.type == state.type }
@@ -90,6 +133,7 @@ fun AddTransactionScreen(
                                 text = { Text(category.name) },
                                 onClick = {
                                     viewModel.onEvent(AddTransactionEvent.CategorySelected(category))
+                                    showCategoryDropdown = false
                                 }
                             )
                         }
@@ -98,26 +142,30 @@ fun AddTransactionScreen(
 
             // Account selector
             ExposedDropdownMenuBox(
-                expanded = false,
-                onExpandedChange = { }
+                expanded = showAccountDropdown,
+                onExpandedChange = { showAccountDropdown = it }
             ) {
                 OutlinedTextField(
                     value = state.selectedAccount?.name ?: "",
                     onValueChange = { },
                     readOnly = true,
-                    label = { Text("Account") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text(stringResource(R.string.account)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showAccountDropdown) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
                 )
 
-                DropdownMenu(
-                    expanded = false,
-                    onDismissRequest = { }
+                ExposedDropdownMenu(
+                    expanded = showAccountDropdown,
+                    onDismissRequest = { showAccountDropdown = false }
                 ) {
                     state.accounts.forEach { account ->
                         DropdownMenuItem(
                             text = { Text(account.name) },
                             onClick = {
                                 viewModel.onEvent(AddTransactionEvent.AccountSelected(account))
+                                showAccountDropdown = false
                             }
                         )
                     }
@@ -128,7 +176,7 @@ fun AddTransactionScreen(
             OutlinedTextField(
                 value = state.note,
                 onValueChange = { viewModel.onEvent(AddTransactionEvent.NoteChanged(it)) },
-                label = { Text("Note") },
+                label = { Text(stringResource(R.string.note)) },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -137,16 +185,18 @@ fun AddTransactionScreen(
                 value = state.date.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
                 onValueChange = { },
                 readOnly = true,
-                label = { Text("Date") },
+                label = { Text(stringResource(R.string.date)) },
                 trailingIcon = {
-                    Icon(Icons.Default.DateRange, contentDescription = "Select date")
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.DateRange, contentDescription = stringResource(R.string.date))
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             )
 
             if (state.error != null) {
                 Text(
-                    text = state.error,
+                    text = state.error!!,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -157,7 +207,7 @@ fun AddTransactionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading
             ) {
-                Text("Add Transaction")
+                Text(stringResource(R.string.add))
             }
         }
     }
@@ -179,8 +229,13 @@ private fun TransactionTypeSelector(
                 onClick = { onTypeSelected(type) },
                 label = {
                     Text(
-                        type.name.lowercase()
-                            .replaceFirstChar { it.uppercase() }
+                        stringResource(
+                            when (type) {
+                                TransactionType.INCOME -> R.string.income
+                                TransactionType.EXPENSE -> R.string.expense
+                                TransactionType.TRANSFER -> R.string.transfer
+                            }
+                        )
                     )
                 },
                 modifier = Modifier.weight(1f)

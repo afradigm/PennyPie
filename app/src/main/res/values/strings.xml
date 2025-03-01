@@ -1,3 +1,30 @@
 <resources>
     <string name="app_name">PennyPie</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_budgets">Budgets</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_back">Back</string>
+    
+    <!-- Common -->
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="filter">Filter</string>
+    <string name="all">All</string>
+    
+    <!-- Transaction -->
+    <string name="amount">Amount</string>
+    <string name="category">Category</string>
+    <string name="account">Account</string>
+    <string name="note">Note</string>
+    <string name="date">Date</string>
+    <string name="type">Type</string>
+    <string name="income">Income</string>
+    <string name="expense">Expense</string>
+    <string name="transfer">Transfer</string>
 </resources>

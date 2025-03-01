@@ -1,17 +1,20 @@
 package com.afra.pennypie.presentation.transactions
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.afra.pennypie.domain.model.Transaction
 import com.afra.pennypie.domain.model.TransactionType
 import com.afra.pennypie.presentation.navigation.Screen
 import org.koin.androidx.compose.koinViewModel
@@ -19,6 +22,8 @@ import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(
     navController: NavController,
@@ -33,7 +38,7 @@ fun TransactionsScreen(
                 title = { Text("Transactions") },
                 actions = {
                     IconButton(onClick = { showFilterDialog = true }) {
-                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                        Icon(Icons.Default.MoreVert, contentDescription = "Filter")
                     }
                 }
             )
@@ -132,6 +137,7 @@ private fun FilterDialog(
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun TransactionItem(
     transaction: Transaction,
