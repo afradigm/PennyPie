@@ -14,7 +14,7 @@ koin = "3.5.3"
 koinCompose = "3.5.3"
 navigationCompose = "2.7.7"
 datastorePreferences = "1.0.0"
-mpAndroidChart = "v3.1.0"
+mpAndroidChart = "2.2.4"
 places = "4.1.0"
 
 [libraries]
